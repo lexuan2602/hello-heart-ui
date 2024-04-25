@@ -18,10 +18,14 @@ import Animated, {
   FadeOut,
 } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
+import GlobalApi from "../Services/GlobalApi";
 export default function LoginScreen() {
   const navigation = useNavigation();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-
+  const [loginData, setLoginData] = useState({
+    identifier: "",
+    password: "",
+  });
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
@@ -41,6 +45,25 @@ export default function LoginScreen() {
       keyboardDidHideListener.remove();
     };
   }, []);
+
+  const hanldeSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const loginUser = {
+        identifier: loginData.identifier,
+        password: loginData.password,
+      };
+      console.log(loginUser);
+      const responseData = await GlobalApi.loginUser(loginUser);
+      console.log(typeof responseData);
+      if (responseData.jwt) {
+        console.log("log in thanh cong");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const styles = StyleSheet.create({
     inputKeyboardOn: {
       // backgroundColor: "blue",
@@ -53,6 +76,14 @@ export default function LoginScreen() {
   const containerStyle = keyboardVisible
     ? styles.inputKeyboardOn
     : styles.inputKeyboardDown;
+
+  const handleChange = (name, value) => {
+    setLoginData((prevLoginData) => ({
+      ...prevLoginData,
+      [name]: value,
+    }));
+  };
+
   return (
     <KeyboardAvoidingView>
       <View className="bg-white h-full w-full">
@@ -104,6 +135,10 @@ export default function LoginScreen() {
                 placeholder="Email"
                 placeholderTextColor={"gray"}
                 keyboardType="email-address"
+                value={loginData.identifier}
+                onChangeText={(text) => {
+                  handleChange("identifier", text);
+                }}
               />
             </Animated.View>
             <Animated.View
@@ -114,13 +149,22 @@ export default function LoginScreen() {
                 placeholder="Password"
                 placeholderTextColor={"gray"}
                 secureTextEntry
+                value={loginData.password}
+                onChangeText={(text) => {
+                  handleChange("password", text);
+                }}
               />
             </Animated.View>
             <Animated.View
               entering={FadeInDown.delay(600).duration(1000).springify()}
               className="w-full"
             >
-              <TouchableOpacity className="w-full bg-red-400 p-3 rounded-2xl mb-3">
+              <TouchableOpacity
+                onPress={(e) => {
+                  hanldeSubmit(e);
+                }}
+                className="w-full bg-red-400 p-3 rounded-2xl mb-3"
+              >
                 <Text className="text-xl font-bold text-white text-center">
                   Login
                 </Text>
